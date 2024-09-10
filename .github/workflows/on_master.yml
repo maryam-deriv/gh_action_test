@@ -3,6 +3,9 @@ name: on_master
 on:
   workflow_call:
 
+env:
+  SERVICE_IMAGE_REPO: "my-simple-image"
+  SERVICE_IMAGE_TAG: 1
 
 jobs:
   test:
@@ -26,9 +29,77 @@ jobs:
       - name: Check if image tag exists
         id: check_service_tag
         run: |
-          if docker manifest inspect "bash:3.2.57-alpine3.20" > /dev/null 2>&1; then
+          if docker manifest inspect "$SERVICE_IMAGE_REPO:$SERVICE_IMAGE_TAG" > /dev/null 2>&1; then
             echo "image tag already exists"
             exit 1
           else
             echo "image tag does not exist"
           fi
+      - name: Build new Docker image
+        id: build_base
+        run: |
+          ./build_docker_image.sh
+
+      - name: Push service Docker image
+        run: |
+          docker push $SERVICE_IMAGE_REPO:$SERVICE_IMAGE_TAG   
+          
+      - name: Get service Docker image digest
+        id: id_get_service_digest
+        run: |
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $SERVICE_IMAGE_REPO:$SERVICE_IMAGE_TAG)
+          if [ -z "$DIGEST" ]; then
+            echo "Failed to retrieve digest for $SERVICE_IMAGE_REPO:$SERVICE_IMAGE_TAG"
+            exit 1
+          fi
+          echo "service_digest=$DIGEST" >> $GITHUB_OUTPUT
+          
+      - name: Update file with image digest
+        run: |
+          cd $GITHUB_WORKSPACE
+          FILE_PATH=service-image-digest.txt
+          SERVICE_IMAGE_DIGEST=${{ steps.id_get_service_digest.outputs.service_digest }}
+          if [ ! -f $FILE_PATH ]; then
+            touch $FILE_PATH
+          fi
+          echo "$SERVICE_IMAGE_DIGEST" >> $FILE_PATH
+
+      - name: Commit and push image digest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure git
+          git config --global user.name 'maryam-deriv'
+          git config --global user.email 'maryam@deriv.com'
+
+          # Checkout to a new branch
+          branch_name=update-image-digest
+          git checkout -b ${branch_name}
+
+          # Add and commit the image digest
+          git add service-image-digest.txt
+          git commit -m "Add Docker image tag and digest [ci skip]"
+
+          # Set remote by authenticating with GITHUB_TOKEN
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+          # Push changes to new branch
+          git push origin HEAD:${branch_name}
+
+          # Create a pull request using Github CLI
+          gh pr create --title "Update new docker image digest" --body "This PR updates the new Docker image digest." --head ${branch_name} --base master
+
+          # Fetch the PR number and validate for auto-merge
+          PR_NUMBER=$(gh pr list --state open --head ${branch_name} --json number --jq '.[0].number')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No pull request found. Exiting..."
+            exit 1
+          fi
+          # Validate PR_NUMBER is a valid number
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid pull request number: $PR_NUMBER"
+            exit 1
+          fi
+
+          # Auto-merge the pull request
+          gh pr merge $PR_NUMBER --merge --delete-branch --body "[ci skip]"
