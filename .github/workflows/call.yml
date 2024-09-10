@@ -11,5 +11,7 @@ jobs:
   call-workflow:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
     uses: ./.github/workflows/on_master.yml
+    secrets: inherit
     permissions:
       contents: write
+      pull-requests: write
