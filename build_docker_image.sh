@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-IMAGE_NAME="my-simple-image"
+IMAGE_NAME="maryamdrv/my-simple-image"
 IMAGE_TAG="1"
 
 # Build the Docker image
