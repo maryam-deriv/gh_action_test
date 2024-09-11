@@ -2,7 +2,7 @@
 
 # Variables
 IMAGE_NAME="maryamdrv/my-simple-image"
-IMAGE_TAG="1.5"
+IMAGE_TAG="1.6"
 
 # Build the Docker image
 echo "Building Docker image: $IMAGE_NAME:$IMAGE_TAG"
