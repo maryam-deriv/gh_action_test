@@ -70,7 +70,7 @@ jobs:
 
       - name: Commit and push image digest
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           # Configure git
           git config --global user.name 'maryam-deriv'
@@ -84,8 +84,8 @@ jobs:
           git add service-image-digest.txt
           git commit -m "Add Docker image tag and digest [ci skip]"
 
-          # Set remote by authenticating with GITHUB_TOKEN
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          # Set remote by authenticating with PERSONAL_ACCESS_TOKEN
+          git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }}.git
 
           # Push changes to new branch
           git push origin HEAD:${branch_name}
