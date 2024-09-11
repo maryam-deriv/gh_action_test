@@ -5,7 +5,7 @@ on:
 
 env:
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG: 1.4
+  SERVICE_IMAGE_TAG: 1.5
 
 jobs:
   test:
@@ -81,5 +81,26 @@ jobs:
           git add service-image-digest.txt
           git commit -m "Update Docker image digest [ci skip]"
 
-          git pull --rebase origin master
-          git push origin $branch_name
+          # Set remote by authenticating with GITHUB_TOKEN
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+          # Push changes to new branch
+          git push origin HEAD:${branch_name}
+
+          # Create a pull request using Github CLI
+          gh pr create --title "Update new docker image digest" --body "This PR updates the new Docker image digest." --head ${branch_name} --base master
+
+          # Fetch the PR number and validate for auto-merge
+          PR_NUMBER=$(gh pr list --state open --head ${branch_name} --json number --jq '.[0].number')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No pull request found. Exiting..."
+            exit 1
+          fi
+          # Validate PR_NUMBER is a valid number
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid pull request number: $PR_NUMBER"
+            exit 1
+          fi
+
+          # Auto-merge the pull request
+          gh pr merge $PR_NUMBER --merge --delete-branch --body "[ci skip]"
