@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env:
-  SERVICE_IMAGE_REPO: "my-simple-image"
+  SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
   SERVICE_IMAGE_TAG: 1
 
 jobs:
