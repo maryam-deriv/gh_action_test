@@ -4,8 +4,10 @@ on:
   workflow_call:
 
 env:
+  BASE_IMAGE_NAME:   "maryamdrv/base-image"
+  BASE_IMAGE_TAG:     1.0
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG: 1.6
+  SERVICE_IMAGE_TAG:  1.7
 
 jobs:
   test:
@@ -30,7 +32,36 @@ jobs:
           username: maryamdrv
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Check if image tag exists
+      - name: Check if base image tag exists
+        id: check_base_tag
+        run: |
+          if docker manifest inspect "$BASE_IMAGE_NAME:$BASE_IMAGE_TAG" > /dev/null 2>&1; then
+            echo "base image tag already exists"
+            exit 1
+          else
+            echo "base image tag does not exist"
+          fi
+
+      - name: Build base Docker image
+        id: build_base_image
+        run: |
+          ./build_docker_image.sh build_base_image
+
+      - name: Push base Docker image
+        run: |
+          docker push $BASE_IMAGE_NAME:$BASE_IMAGE_TAG   
+          
+      - name: Get base Docker image digest
+        id: id_get_base_digest
+        run: |
+          BASE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $BASE_IMAGE_NAME:$BASE_IMAGE_TAG)
+          if [ -z "$BASE_DIGEST" ]; then
+            echo "Failed to retrieve digest for $BASE_IMAGE_NAME:$BASE_IMAGE_TAG"
+            exit 1
+          fi
+          echo "base_digest=$BASE_DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Check if service image tag exists
         id: check_service_tag
         run: |
           if docker manifest inspect "$SERVICE_IMAGE_REPO:$SERVICE_IMAGE_TAG" > /dev/null 2>&1; then
@@ -39,10 +70,10 @@ jobs:
           else
             echo "image tag does not exist"
           fi
-      - name: Build new Docker image
-        id: build_base
+      - name: Build service Docker image
+        id: build_service_image
         run: |
-          ./build_docker_image.sh
+          ./build_docker_image.sh build_service_image
 
       - name: Push service Docker image
         run: |
@@ -61,12 +92,23 @@ jobs:
       - name: Update file with image digest
         run: |
           cd $GITHUB_WORKSPACE
-          FILE_PATH=service-image-digest.txt
+          SERVICE_FILE_PATH=service-image-digest.txt
+          BASE_FILE_PATH=base-image-digest.txt
           SERVICE_IMAGE_DIGEST=${{ steps.id_get_service_digest.outputs.service_digest }}
-          if [ ! -f $FILE_PATH ]; then
-            touch $FILE_PATH
+          BASE_IMAGE_DIGEST=${{ steps.id_get_base_digest.outputs.base_digest }}
+          
+          # Handle service image digest file
+          if [ ! -f $SERVICE_FILE_PATH ]; then
+            touch $SERVICE_FILE_PATH
           fi
-          echo "$SERVICE_IMAGE_DIGEST" >> $FILE_PATH
+          echo "$SERVICE_IMAGE_DIGEST" >> $SERVICE_FILE_PATH
+
+          # Handle base image digest file
+          if [ ! -f $BASE_FILE_PATH ]; then
+            touch $BASE_FILE_PATH
+          fi
+          echo "$BASE_IMAGE_DIGEST" >> $BASE_FILE_PATH
+
 
       - name: Commit and push image digest
         env:
@@ -79,6 +121,7 @@ jobs:
           git checkout -b $branch_name
 
           git add service-image-digest.txt
+          git add base-image-digest.txt
           git commit -m "Update Docker image digest [ci skip]"
 
           # Set remote by authenticating with GITHUB_TOKEN
