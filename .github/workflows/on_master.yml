@@ -5,7 +5,7 @@ on:
 
 env:
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG: 1
+  SERVICE_IMAGE_TAG: 1.2
 
 jobs:
   test:
