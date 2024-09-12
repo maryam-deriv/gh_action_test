@@ -35,20 +35,34 @@ jobs:
       - name: Check if base image digest exists in the file
         id: check_base_digest
         run: |
-          # Retrieve the base image digest
-          BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_NAME:$BASE_IMAGE_TAG --verbose | jq -r '.Descriptor.digest')
-          echo "Base Image Digest: $BASE_IMAGE_DIGEST"
-          
-          # Define file path for storing digest
-          BASE_FILE_PATH=base-image-digest.txt
-          
-          # Check if the file exists and contains the digest
-          if [ -f "$BASE_FILE_PATH" ] && grep -q "$BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST" "$BASE_FILE_PATH"; then
-            echo "Base image digest found in the file."
-            echo "digest_exists=true" >> $GITHUB_ENV  # Set a variable to skip the following steps
-          else
-            echo "Base image digest not found in the file. Proceeding with build and push."
+          # Attempt to retrieve the base image digest
+          BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_NAME:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
+
+          # Check if the digest is correctly retrieved
+          if [[ $? -ne 0 || -z "$BASE_IMAGE_DIGEST" ]]; then
+            echo "No digest found."
             echo "digest_exists=false" >> $GITHUB_ENV
+          else
+            echo "Base Image Digest: $BASE_IMAGE_DIGEST"
+
+            # Define file path for storing digest
+            BASE_FILE_PATH=base-image-digest.txt
+
+            # Debug the content of the file and the search term
+            echo "Searching for: $BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST"
+            if [ -f "$BASE_FILE_PATH" ]; then
+              echo "File exists. Checking for digest..."
+              if grep -q "$BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST" "$BASE_FILE_PATH"; then
+                echo "Base image digest found in the file."
+                echo "digest_exists=true" >> $GITHUB_ENV  # Set a variable to skip the following steps
+              else
+                echo "Base image digest not found in the file."
+                echo "digest_exists=false" >> $GITHUB_ENV
+              fi
+            else
+              echo "File does not exist."
+              echo "digest_exists=false" >> $GITHUB_ENV
+            fi
           fi
 
       - name: Build base Docker image
