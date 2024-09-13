@@ -5,7 +5,7 @@ BASE_IMAGE_NAME="maryamdrv/base-image"
 BASE_IMAGE_TAG="1.5"
 
 SERVICE_IMAGE_NAME="maryamdrv/my-simple-image"
-SERVICE_IMAGE_TAG="1.15"
+SERVICE_IMAGE_TAG="1.16"
 
 DOCKERFILE="Dockerfile"
 
