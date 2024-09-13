@@ -4,10 +4,10 @@ on:
   workflow_call:
 
 env:
-  BASE_IMAGE_NAME:   "maryamdrv/base-image"
+  BASE_IMAGE_REPO:   "maryamdrv/base-image"
   BASE_IMAGE_TAG:     1.5
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG:  "1.18"
+  SERVICE_IMAGE_TAG:  "1.19"
   SERVICE_FILE_PATH:  "service-image-digest.txt"
   BASE_FILE_PATH:     "base-image-digest.txt"
 
@@ -53,14 +53,14 @@ jobs:
         id: check_base_digest
         run: |
           # Attempt to retrieve the base image digest
-          BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_NAME:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
+          BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_REPO:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
 
           if [[ $? -ne 0 || -z "$BASE_IMAGE_DIGEST" ]]; then
             echo "No digest found."
             echo "digest_exists=false" >> $GITHUB_ENV
           else
-            echo "Searching for: $BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST"
-            if grep -q "$BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST" "$BASE_FILE_PATH"; then
+            echo "Searching for: $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST"
+            if grep -q "$BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST" "$BASE_FILE_PATH"; then
               echo "Base image digest found in the file."
               echo "digest_exists=true" >> $GITHUB_ENV
             else
@@ -70,23 +70,26 @@ jobs:
           fi
 
       - name: Build base Docker image
-        if: env.digest_exists == 'false'
         id: build_base_image
         run: |
-          ./build_docker_image.sh build_base_image
+         if [[ $digest_exists == 'true' ]]; then
+            docker image pull $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST
+         else
+            ./build_docker_image.sh build_base_image
+         fi 
 
       - name: Push base Docker image
         if: env.digest_exists == 'false'
         run: |
-          docker push $BASE_IMAGE_NAME:$BASE_IMAGE_TAG   
+          docker push $BASE_IMAGE_REPO:$BASE_IMAGE_TAG   
           
       - name: Get base Docker image digest
         if: env.digest_exists == 'false'
         id: id_get_base_digest
         run: |
-          BASE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $BASE_IMAGE_NAME:$BASE_IMAGE_TAG)
+          BASE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $BASE_IMAGE_REPO:$BASE_IMAGE_TAG)
           if [ -z "$BASE_DIGEST" ]; then
-            echo "Failed to retrieve digest for $BASE_IMAGE_NAME:$BASE_IMAGE_TAG"
+            echo "Failed to retrieve digest for $BASE_IMAGE_REPO:$BASE_IMAGE_TAG"
             exit 1
           fi
           echo "base_digest=$BASE_DIGEST" >> $GITHUB_OUTPUT
