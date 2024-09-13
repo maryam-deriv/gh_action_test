@@ -34,11 +34,18 @@ jobs:
           username: maryamdrv
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Get BASE_IMAGE_TAG from deployment script
+        id: get-base-image-tag
+        run: |
+          cd $GITHUB_WORKSPACE
+
+          echo "BASE_IMAGE_TAGGGG=$(./build_docker_image.sh get_base_image_tag)" >> $GITHUB_ENV
+
       - name: Check file paths exist
         id: check_file_path
         run: |
            cd $GITHUB_WORKSPACE
-           
+           echo $BASE_IMAGE_TAGGGG
            # Handle base image digest file
            if [ ! -f $BASE_FILE_PATH ]; then
             touch $BASE_FILE_PATH
