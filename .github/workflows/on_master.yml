@@ -123,7 +123,7 @@ jobs:
         run: |
           SERVICE_IMAGE_DIGEST=${{ steps.id_get_service_digest.outputs.service_digest }}
           BASE_IMAGE_DIGEST=${{ steps.id_get_base_digest.outputs.base_digest }}
-          
+          cd $GITHUB_WORKSPACE
           echo "$SERVICE_IMAGE_DIGEST" >> $SERVICE_FILE_PATH
           echo "$BASE_IMAGE_DIGEST" >> $BASE_FILE_PATH
 
