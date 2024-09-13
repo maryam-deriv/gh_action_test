@@ -7,3 +7,4 @@ CMD ["echo", "Hello from my base image!"]
 USER root
 
 RUN mkdir -p /test
+RUN mkdir /test2

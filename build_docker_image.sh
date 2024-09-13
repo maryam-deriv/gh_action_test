@@ -2,7 +2,7 @@
 
 # Default values
 BASE_IMAGE_NAME="maryamdrv/base-image"
-BASE_IMAGE_TAG="1.4"
+BASE_IMAGE_TAG="1.5"
 
 SERVICE_IMAGE_NAME="maryamdrv/my-simple-image"
 SERVICE_IMAGE_TAG="1.15"
