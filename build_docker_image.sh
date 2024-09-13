@@ -18,7 +18,7 @@ elif [ "$1" == "build_service_image" ]; then
   IMAGE_NAME="$SERVICE_IMAGE_NAME"
   IMAGE_TAG="$SERVICE_IMAGE_TAG"
   DOCKERFILE="Dockerfile"
-elif [ "$1" == "get_base_image_tag"]; then
+elif [ "$1" == "get_base_image_tag" ]; then
   echo "$BASE_IMAGE_TAG"
 else
   echo "Invalid argument. Use 'build_base_image' or 'build_service_image'."
