@@ -32,6 +32,23 @@ jobs:
           username: maryamdrv
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Check file paths exist
+        id: check_file_path
+        run: |
+           cd $GITHUB_WORKSPACE
+           SERVICE_FILE_PATH=service-image-digest.txt
+           BASE_FILE_PATH=base-image-digest.txt
+           
+           # Handle base image digest file
+           if [ ! -f $BASE_FILE_PATH ]; then
+            touch $BASE_FILE_PATH
+           fi
+
+           # Handle service image digest file
+           if [ ! -f $SERVICE_FILE_PATH ]; then
+            touch $SERVICE_FILE_PATH
+           fi
+
       - name: Check if base image digest exists in the file
         id: check_base_digest
         run: |
@@ -45,13 +62,9 @@ jobs:
           else
             echo "Base Image Digest: $BASE_IMAGE_DIGEST"
 
-            # Define file path for storing digest
-            BASE_FILE_PATH=base-image-digest.txt
 
             # Debug the content of the file and the search term
-            echo "Searching for: $BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST"
-            if [ -f "$BASE_FILE_PATH" ]; then
-              echo "File exists. Checking for digest..."
+              echo "Searching for: $BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST"
               if grep -q "$BASE_IMAGE_NAME@$BASE_IMAGE_DIGEST" "$BASE_FILE_PATH"; then
                 echo "Base image digest found in the file."
                 echo "digest_exists=true" >> $GITHUB_ENV  # Set a variable to skip the following steps
@@ -59,11 +72,6 @@ jobs:
                 echo "Base image digest not found in the file."
                 echo "digest_exists=false" >> $GITHUB_ENV
               fi
-            else
-              echo "File does not exist."
-              echo "digest_exists=false" >> $GITHUB_ENV
-            fi
-          fi
 
       - name: Build base Docker image
         if: env.digest_exists == 'false'
@@ -117,22 +125,10 @@ jobs:
           
       - name: Update file with image digest
         run: |
-          cd $GITHUB_WORKSPACE
-          SERVICE_FILE_PATH=service-image-digest.txt
-          BASE_FILE_PATH=base-image-digest.txt
           SERVICE_IMAGE_DIGEST=${{ steps.id_get_service_digest.outputs.service_digest }}
           BASE_IMAGE_DIGEST=${{ steps.id_get_base_digest.outputs.base_digest }}
           
-          # Handle service image digest file
-          if [ ! -f $SERVICE_FILE_PATH ]; then
-            touch $SERVICE_FILE_PATH
-          fi
           echo "$SERVICE_IMAGE_DIGEST" >> $SERVICE_FILE_PATH
-
-          # Handle base image digest file
-          if [ ! -f $BASE_FILE_PATH ]; then
-            touch $BASE_FILE_PATH
-          fi
           echo "$BASE_IMAGE_DIGEST" >> $BASE_FILE_PATH
 
       - name: Commit and push image digest
