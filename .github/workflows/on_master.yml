@@ -7,7 +7,7 @@ env:
   BASE_IMAGE_NAME:   "maryamdrv/base-image"
   BASE_IMAGE_TAG:     1.5
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG:  "1.16"
+  SERVICE_IMAGE_TAG:  "1.17"
   SERVICE_FILE_PATH:  "service-image-digest.txt"
   BASE_FILE_PATH:     "base-image-digest.txt"
 
@@ -125,7 +125,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           echo "$SERVICE_IMAGE_DIGEST" >> $SERVICE_FILE_PATH
 
-          if [[ env.digest_exists == 'false' ]]; then
+          if [[ $digest_exists == 'false' ]]; then
             BASE_IMAGE_DIGEST=${{ steps.id_get_base_digest.outputs.base_digest }}
             echo "$BASE_IMAGE_DIGEST" >> $BASE_FILE_PATH
           fi
