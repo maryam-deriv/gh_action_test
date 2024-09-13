@@ -20,6 +20,7 @@ elif [ "$1" == "build_service_image" ]; then
   DOCKERFILE="Dockerfile"
 elif [ "$1" == "get_base_image_tag" ]; then
   echo "$BASE_IMAGE_TAG"
+  exit 0
 else
   echo "Invalid argument. Use 'build_base_image' or 'build_service_image'."
   exit 1
