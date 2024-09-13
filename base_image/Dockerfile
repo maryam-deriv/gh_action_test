@@ -5,3 +5,5 @@ FROM alpine:latest
 CMD ["echo", "Hello from my base image!"]
 
 USER nobody
+
+RUN mkdir -p /test
