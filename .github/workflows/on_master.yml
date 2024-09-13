@@ -71,7 +71,6 @@ jobs:
               else
                 echo "Base image digest not found in the file."
                 echo "digest_exists=false" >> $GITHUB_ENV
-              fi
 
       - name: Build base Docker image
         if: env.digest_exists == 'false'
