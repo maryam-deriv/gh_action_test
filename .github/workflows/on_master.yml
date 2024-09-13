@@ -7,7 +7,9 @@ env:
   BASE_IMAGE_NAME:   "maryamdrv/base-image"
   BASE_IMAGE_TAG:     1.4
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG:  "1.12"
+  SERVICE_IMAGE_TAG:  "1.13"
+  SERVICE_FILE_PATH:  "service-image-digest.txt"
+  BASE_FILE_PATH:     "base-image-digest.txt"
 
 jobs:
   test:
@@ -36,8 +38,6 @@ jobs:
         id: check_file_path
         run: |
            cd $GITHUB_WORKSPACE
-           SERVICE_FILE_PATH=service-image-digest.txt
-           BASE_FILE_PATH=base-image-digest.txt
            
            # Handle base image digest file
            if [ ! -f $BASE_FILE_PATH ]; then
@@ -137,8 +137,7 @@ jobs:
           branch_name="update-image-digest"-${{ github.sha }}
           git checkout -b $branch_name
 
-          git add service-image-digest.txt
-          git add base-image-digest.txt
+          git add $SERVICE_FILE_PATH $BASE_FILE_PATH
           git commit -m "Update Docker image digest [ci skip]"
 
           # Set remote by authenticating with GITHUB_TOKEN
