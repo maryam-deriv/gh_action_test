@@ -2,10 +2,10 @@
 
 # Default values
 BASE_IMAGE_NAME="maryamdrv/base-image"
-BASE_IMAGE_TAG="1.5"
+BASE_IMAGE_TAG="1.6"
 
 SERVICE_IMAGE_NAME="maryamdrv/my-simple-image"
-SERVICE_IMAGE_TAG="1.19"
+SERVICE_IMAGE_TAG="1.20"
 
 DOCKERFILE="Dockerfile"
 

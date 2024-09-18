@@ -8,3 +8,4 @@ USER root
 
 RUN mkdir -p /test
 RUN mkdir /test2
+RUN mkdir /test3
