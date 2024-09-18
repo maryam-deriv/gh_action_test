@@ -59,10 +59,10 @@ jobs:
       - name: Get changed files in docs folderr
         id: dsjfdshfdsh
         run: |
-            # Fetch the latest commits from the master branch
-            git fetch origin master
-            # Check for changes in the /base_image directory
-            if git diff --quiet origin/master -- base_image/; then
+            git diff --quiet HEAD -- base_image || echo "Changes detected"
+            git diff --quiet HEAD^ HEAD -- base_image || echo "Changes in base_image"
+            # Check for changes in the base_image directory
+            if git diff --quiet HEAD HEAD~1 -- base_image; then
               echo "No changes detected in /base_image."
             else
               echo "Changes detected in /base_image."
