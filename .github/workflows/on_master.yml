@@ -56,6 +56,18 @@ jobs:
             touch $SERVICE_FILE_PATH
            fi
             
+      - name: Get changed files in docs folderr
+        id: dsjfdshfdsh
+        run: |
+            # Fetch the latest commits from the master branch
+            git fetch origin master
+            # Check for changes in the /base_image directory
+            if git diff --quiet origin/master -- base_image/; then
+              echo "No changes detected in /base_image."
+            else
+              echo "Changes detected in /base_image."
+            fi
+
       - name: Get changed files in the docs folder
         id: changed-files-specific
         uses: tj-actions/changed-files@v45
