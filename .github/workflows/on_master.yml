@@ -55,6 +55,17 @@ jobs:
            if [ ! -f $SERVICE_FILE_PATH ]; then
             touch $SERVICE_FILE_PATH
            fi
+            
+      - name: Get changed files in the docs folder
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v45
+        with:
+          files: base_image/**  # Alternatively using: `docs/**`
+
+      - name: Run step if any file(s) in the docs folder change
+        if: steps.changed-files-specific.outputs.any_changed == 'true'
+        run: |
+          echo "One or more files in the docs folder has changed."
 
       - name: Check if base image digest exists in the file
         id: check_base_digest
