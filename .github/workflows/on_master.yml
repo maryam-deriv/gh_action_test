@@ -5,9 +5,9 @@ on:
 
 env:
   BASE_IMAGE_REPO:   "maryamdrv/base-image"
-  BASE_IMAGE_TAG:     1.6
+  BASE_IMAGE_TAG:     1.7
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG:  "1.20"
+  SERVICE_IMAGE_TAG:  "1.21"
   SERVICE_FILE_PATH:  "service-image-digest.txt"
   BASE_FILE_PATH:     "base-image-digest.txt"
 
@@ -27,7 +27,7 @@ jobs:
       - name: echo
         run: |
           echo "hello" 
-          echo ${{ github.head_ref }}
+          echo ${{ github.event.pull_request.head.sha }}
           echo ${{ github.sha }}
 
       - name: Login to Docker Hub
@@ -161,7 +161,7 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
           
-          branch_name="update-image-digest"-${{ github.sha }}
+          branch_name="update-image-digest"-${{ github.event.pull_request.head.sha }}
           git checkout -b $branch_name
 
           git add $SERVICE_FILE_PATH $BASE_FILE_PATH
