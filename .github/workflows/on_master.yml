@@ -27,6 +27,8 @@ jobs:
       - name: echo
         run: |
           echo "hello" 
+          echo ${{ github.head_ref }}
+          echo ${{ github.sha }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
