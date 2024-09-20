@@ -29,7 +29,7 @@ jobs:
           echo "hello" 
           echo ${{ github.event.pull_request.head.sha }}
           echo ${{ github.sha }}
-
+          echo ${{ github.event.pull_request.base.sha }}
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -58,17 +58,6 @@ jobs:
             touch $SERVICE_FILE_PATH
            fi
 
-      # - name: Get changed files in the docs folder
-      #   id: changed-files-specific
-      #   uses: tj-actions/changed-files@v45
-      #   with:
-      #     files: base_image/**  
-
-      # - name: Run step if any file(s) in the docs folder change
-      #   if: steps.changed-files-specific.outputs.any_changed == 'true'
-      #   run: |
-      #     echo "One or more files in the docs folder has changed."
-
       - name: Check if base image digest exists in the file
         id: check_base_digest
         run: |
@@ -89,23 +78,23 @@ jobs:
             fi
           fi
 
-      # - name: Build base Docker image
-      #   id: build_base_image
-      #   run: |
-      #    if [[ ${{ steps.changed-files-specific.outputs.any_changed }} == 'false' ]]; then
-      #       BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_REPO:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
-      #       docker image pull $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST
-      #    else
-      #       ./build_docker_image.sh build_base_image
-      #    fi 
+      - name: Build base Docker image
+        id: build_base_image
+        run: |
+         if [[ $digest_exists == 'true' ]]; then
+            BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_REPO:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
+            docker image pull $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST
+         else
+            ./build_docker_image.sh build_base_image
+         fi 
 
       - name: Push base Docker image
-        if: steps.changed-files-specific.outputs.any_changed == 'true'
+        if: env.digest_exists == 'false'
         run: |
           docker push $BASE_IMAGE_REPO:$BASE_IMAGE_TAG   
           
       - name: Get base Docker image digest
-        if: steps.changed-files-specific.outputs.any_changed == 'true'
+        if: env.digest_exists == 'false'
         id: id_get_base_digest
         run: |
           BASE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $BASE_IMAGE_REPO:$BASE_IMAGE_TAG)
@@ -149,7 +138,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           echo "$SERVICE_IMAGE_DIGEST" >> $SERVICE_FILE_PATH
 
-          if [[ ${{ steps.changed-files-specific.outputs.any_changed }} == 'true' ]]; then
+          if [[ $digest_exists == 'false' ]]; then
             BASE_IMAGE_DIGEST=${{ steps.id_get_base_digest.outputs.base_digest }}
             echo "$BASE_IMAGE_DIGEST" >> $BASE_FILE_PATH
           fi
@@ -161,7 +150,7 @@ jobs:
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
           
-          branch_name="update-image-digest"-${{ github.event.pull_request.head.sha }}
+          branch_name="update-image-digest"-${{ github.sha }}
           git checkout -b $branch_name
 
           git add $SERVICE_FILE_PATH $BASE_FILE_PATH
