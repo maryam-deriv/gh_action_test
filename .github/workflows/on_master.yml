@@ -41,13 +41,13 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
 
-          echo "BASE_IMAGE_TAGGGG=$(./build_docker_image.sh get_base_image_tag)" >> $GITHUB_ENV
+          echo "BASE_IMAGE_TAG=$(./build_docker_image.sh get_base_image_tag)" >> $GITHUB_ENV
 
       - name: Check file paths exist
         id: check_file_path
         run: |
            cd $GITHUB_WORKSPACE
-           echo $BASE_IMAGE_TAGGGG
+           echo $BASE_IMAGE_TAG
            # Handle base image digest file
            if [ ! -f $BASE_FILE_PATH ]; then
             touch $BASE_FILE_PATH
@@ -58,46 +58,46 @@ jobs:
             touch $SERVICE_FILE_PATH
            fi
 
-      - name: Get changed files in the docs folder
-        id: changed-files-specific
-        uses: tj-actions/changed-files@v45
-        with:
-          files: base_image/**  
+      # - name: Get changed files in the docs folder
+      #   id: changed-files-specific
+      #   uses: tj-actions/changed-files@v45
+      #   with:
+      #     files: base_image/**  
 
-      - name: Run step if any file(s) in the docs folder change
-        if: steps.changed-files-specific.outputs.any_changed == 'true'
-        run: |
-          echo "One or more files in the docs folder has changed."
-
-      # - name: Check if base image digest exists in the file
-      #   id: check_base_digest
+      # - name: Run step if any file(s) in the docs folder change
+      #   if: steps.changed-files-specific.outputs.any_changed == 'true'
       #   run: |
-      #     # Attempt to retrieve the base image digest
-      #     BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_REPO:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
+      #     echo "One or more files in the docs folder has changed."
 
-      #     if [[ $? -ne 0 || -z "$BASE_IMAGE_DIGEST" ]]; then
-      #       echo "No digest found."
-      #       echo "digest_exists=false" >> $GITHUB_ENV
-      #     else
-      #       echo "Searching for: $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST"
-      #       if grep -q "$BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST" "$BASE_FILE_PATH"; then
-      #         echo "Base image digest found in the file."
-      #         echo "digest_exists=true" >> $GITHUB_ENV
-      #       else
-      #         echo "Base image digest not found in the file."
-      #         echo "digest_exists=false" >> $GITHUB_ENV
-      #       fi
-      #     fi
-
-      - name: Build base Docker image
-        id: build_base_image
+      - name: Check if base image digest exists in the file
+        id: check_base_digest
         run: |
-         if [[ ${{ steps.changed-files-specific.outputs.any_changed }} == 'false' ]]; then
-            BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_REPO:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
-            docker image pull $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST
-         else
-            ./build_docker_image.sh build_base_image
-         fi 
+          # Attempt to retrieve the base image digest
+          BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_REPO:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
+
+          if [[ $? -ne 0 || -z "$BASE_IMAGE_DIGEST" ]]; then
+            echo "No digest found."
+            echo "digest_exists=false" >> $GITHUB_ENV
+          else
+            echo "Searching for: $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST"
+            if grep -q "$BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST" "$BASE_FILE_PATH"; then
+              echo "Base image digest found in the file."
+              echo "digest_exists=true" >> $GITHUB_ENV
+            else
+              echo "Base image digest not found in the file."
+              echo "digest_exists=false" >> $GITHUB_ENV
+            fi
+          fi
+
+      # - name: Build base Docker image
+      #   id: build_base_image
+      #   run: |
+      #    if [[ ${{ steps.changed-files-specific.outputs.any_changed }} == 'false' ]]; then
+      #       BASE_IMAGE_DIGEST=$(docker manifest inspect $BASE_IMAGE_REPO:$BASE_IMAGE_TAG --verbose 2>/dev/null | jq -r '.Descriptor.digest')
+      #       docker image pull $BASE_IMAGE_REPO@$BASE_IMAGE_DIGEST
+      #    else
+      #       ./build_docker_image.sh build_base_image
+      #    fi 
 
       - name: Push base Docker image
         if: steps.changed-files-specific.outputs.any_changed == 'true'
