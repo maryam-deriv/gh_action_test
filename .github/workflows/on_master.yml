@@ -7,7 +7,7 @@ env:
   BASE_IMAGE_REPO:   "maryamdrv/base-image"
   BASE_IMAGE_TAG:     1.7
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG:  "1.22"
+  SERVICE_IMAGE_TAG:  "1.23"
   SERVICE_FILE_PATH:  "service-image-digest.txt"
   BASE_FILE_PATH:     "base-image-digest.txt"
 
