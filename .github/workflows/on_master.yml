@@ -7,7 +7,7 @@ env:
   BASE_IMAGE_REPO:   "maryamdrv/base-image"
   BASE_IMAGE_TAG:     1.8
   SERVICE_IMAGE_REPO: "maryamdrv/my-simple-image"
-  SERVICE_IMAGE_TAG:  "1.26"
+  SERVICE_IMAGE_TAG:  "1.27"
   SERVICE_FILE_PATH:  "service-image-digest.txt"
   BASE_FILE_PATH:     "base-image-digest.txt"
 
@@ -133,7 +133,7 @@ jobs:
           DIGEST_ONLY="${DIGEST#*@}"
           # Format as reponame:tag@digest
           SERVICE_IMAGE_WITH_DIGEST="$SERVICE_IMAGE_REPO:$SERVICE_IMAGE_TAG@$DIGEST_ONLY"
-          echo "service_digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "service_digest=$SERVICE_IMAGE_WITH_DIGEST" >> $GITHUB_OUTPUT
           
       - name: Update file with image digest
         run: |
